@@ -151,6 +151,27 @@ class WeatherViewModel: ObservableObject {
                     let decoded = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
                     self?.weatherData = decoded
                     OfflineCacheManager.shared.save(decoded, for: cacheKey)
+                    
+                    // Hook into BP Airspace Engines
+                    if let firstWind = decoded.hourly.wind_speed_10m.first,
+                       let firstTemp = decoded.hourly.temperature_2m.first,
+                       let firstVis = decoded.hourly.visibility.first,
+                       let firstDir = decoded.hourly.wind_direction_10m.first {
+                        
+                        let agg = AggregatedWeather(
+                            windSpeed: firstWind,
+                            windDirection: firstDir,
+                            temperature: firstTemp,
+                            visibility: firstVis,
+                            rawMETAR: nil
+                        )
+                        
+                        HazardEngine.shared.analyze(weather: agg)
+                        TEMEngine.shared.generateTEM(from: HazardEngine.shared.activeHazards)
+                        FatigueEngine.shared.calculateFatigue(hazards: HazardEngine.shared.activeHazards, flightDurationHours: 4.5)
+                        AICopilotEngine.shared.generateBriefing(weather: agg, hazards: HazardEngine.shared.activeHazards)
+                    }
+                    
                 } catch {
                     print("Failed to decode weather data: \(error)")
                 }
