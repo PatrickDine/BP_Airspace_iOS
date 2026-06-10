@@ -1,6 +1,6 @@
-# Phoenix Services iOS
+# BP Airspace iOS
 
-A native iOS rewrite of the **Phoenix Services — Flight Path Intelligence** dashboard, built completely in Swift and SwiftUI.
+A native iOS rewrite of the **BP Airspace — Flight Path Intelligence** dashboard, built completely in Swift and SwiftUI.
 
 ## 🚀 Features
 
@@ -32,7 +32,7 @@ To run the application locally on your Mac:
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/PatrickDine/Phoenix_Airspace_iOS.git
+   git clone https://github.com/PatrickDine/BP_Airspace_iOS.git
    ```
 2. Open **Xcode**.
 3. Create a **New iOS App Project** (SwiftUI).

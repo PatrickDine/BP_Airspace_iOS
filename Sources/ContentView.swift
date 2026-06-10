@@ -54,7 +54,7 @@ struct ContentView: View {
 
 // Entry Point
 @main
-struct PhoenixAirspaceApp: App {
+struct BPAirspaceApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
