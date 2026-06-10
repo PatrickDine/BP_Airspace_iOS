@@ -2,94 +2,78 @@ import SwiftUI
 import MapKit
 
 struct MapView: View {
-    @ObservedObject var weatherVM: WeatherViewModel
+    @EnvironmentObject var viewModel: WeatherViewModel
     
-    // Default region: Continental US
-    @State private var region = MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 39.8283, longitude: -98.5795),
-        span: MKCoordinateSpan(latitudeDelta: 20.0, longitudeDelta: 20.0)
-    )
+    // Map Camera Position
+    @State private var position: MapCameraPosition = .automatic
     
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            Map(coordinateRegion: $region, interactionModes: .all, showsUserLocation: false, userTrackingMode: nil)
-                .ignoresSafeArea()
-            
-            // Weather Layer Controls
-            VStack(spacing: 8) {
-                ForEach(WeatherViewModel.WeatherLayer.allCases) { layer in
-                    Button(action: {
-                        withAnimation { weatherVM.selectedLayer = layer }
-                    }) {
-                        Image(systemName: layer.iconName)
-                            .font(.system(size: 20))
-                            .frame(width: 48, height: 48)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(8)
-                            .foregroundColor(weatherVM.selectedLayer == layer ? AppColors.accentGold : AppColors.textSecondary)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(weatherVM.selectedLayer == layer ? AppColors.accentGold : AppColors.textSecondary.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-                    }
+        Map(position: $position) {
+            // Draw active route if available
+            if let route = viewModel.activeRoute {
+                MapPolyline(coordinates: route.coordinates)
+                    .stroke(.green, lineWidth: 4)
+                
+                // Start Marker (Green)
+                if let first = route.coordinates.first {
+                    Marker(route.departure, systemImage: "airplane.departure", coordinate: first)
+                        .tint(.green)
+                }
+                
+                // End Marker (Red)
+                if let last = route.coordinates.last {
+                    Marker(route.arrival, systemImage: "airplane.arrival", coordinate: last)
+                        .tint(.red)
                 }
             }
-            .padding()
             
-            // Live Info Panel
-            VStack(alignment: .trailing) {
-                InfoPanel(weatherVM: weatherVM)
+            // Draw Geocoded Search Result
+            if let searchLocation = viewModel.selectedLocation {
+                Marker(searchLocation.name, systemImage: "mappin.circle.fill", coordinate: CLLocationCoordinate2D(latitude: searchLocation.latitude, longitude: searchLocation.longitude))
+                    .tint(.blue)
             }
-            .frame(maxWidth: .infinity, alignment: .topTrailing)
-            .padding()
         }
-    }
-}
-
-struct InfoPanel: View {
-    @ObservedObject var weatherVM: WeatherViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Live Metrics")
-                    .font(.headline)
-                    .foregroundColor(AppColors.textPrimary)
-                Spacer()
-                Text("LIVE")
-                    .font(.caption2).bold()
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(AppColors.safe.opacity(0.2))
-                    .foregroundColor(AppColors.safe)
-                    .cornerRadius(10)
-            }
-            
-            ForEach(weatherVM.metrics) { metric in
-                HStack {
-                    Text(metric.title)
-                        .font(.subheadline)
-                        .foregroundColor(AppColors.textSecondary)
-                    Spacer()
-                    Text(metric.value)
-                        .font(.subheadline).bold()
-                        .foregroundColor(AppColors.textPrimary)
+        .mapStyle(.standard(elevation: .realistic))
+        .mapControls {
+            MapUserLocationButton()
+            MapCompass()
+            MapScaleView()
+        }
+        .overlay {
+            // Overlay visual weather layers based on active layers
+            // Note: True weather map tiles require MapKit JS or custom MKTileOverlay
+            // For native MapKit, we simulate global overlay effects.
+            ZStack {
+                if viewModel.activeLayers.contains(.radar) {
+                    Color.blue.opacity(0.1).ignoresSafeArea().allowsHitTesting(false)
                 }
-                if metric.id != weatherVM.metrics.last?.id {
-                    Divider()
-                        .background(AppColors.accentGold.opacity(0.2))
+                if viewModel.activeLayers.contains(.clouds) {
+                    Color.gray.opacity(0.2).ignoresSafeArea().allowsHitTesting(false)
+                }
+                if viewModel.activeLayers.contains(.temperature) {
+                    Color.red.opacity(0.05).ignoresSafeArea().allowsHitTesting(false)
                 }
             }
         }
-        .padding()
-        .frame(width: 250)
-        .background(.ultraThinMaterial)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(AppColors.accentGold.opacity(0.3), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+        .onAppear {
+            if let route = viewModel.activeRoute, let first = route.coordinates.first {
+                // Initial weather fetch for departure
+                viewModel.fetchWeather(lat: first.latitude, lng: first.longitude)
+                
+                // Auto position map to route
+                let rect = MKMapRect(
+                    origin: MKMapPoint(first),
+                    size: MKMapSize(width: MKMapPoint(route.coordinates.last!).x - MKMapPoint(first).x,
+                                    height: MKMapPoint(route.coordinates.last!).y - MKMapPoint(first).y)
+                )
+                position = .rect(rect)
+            }
+        }
+        .onChange(of: viewModel.selectedLocation?.id) { _ in
+            if let loc = viewModel.selectedLocation {
+                viewModel.fetchWeather(lat: loc.latitude, lng: loc.longitude)
+                position = .camera(MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude), distance: 500000))
+            }
+        }
     }
 }
