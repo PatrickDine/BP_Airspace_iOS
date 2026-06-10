@@ -35,10 +35,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "AppModule",
-            path: "App",
-            resources: [
-                .process("Assets.xcassets")
-            ]
+            path: "App"
         ),
         .testTarget(
             name: "BPAirspaceTests",

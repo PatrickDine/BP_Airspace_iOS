@@ -69,7 +69,7 @@ struct MapView: View {
                 position = .rect(rect)
             }
         }
-        .onChange(of: viewModel.selectedLocation?.id) { _ in
+        .onChange(of: viewModel.selectedLocation?.id) { oldValue, newValue in
             if let loc = viewModel.selectedLocation {
                 viewModel.fetchWeather(lat: loc.latitude, lng: loc.longitude)
                 position = .camera(MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude), distance: 500000))

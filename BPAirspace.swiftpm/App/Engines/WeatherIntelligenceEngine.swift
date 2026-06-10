@@ -37,7 +37,6 @@ actor WeatherIntelligenceEngine {
     // Normalization
     private func normalize(openMeteo: OpenMeteoResponse, metar: String?) -> AggregatedWeather {
         // Find current hour index
-        let formatter = ISO8601DateFormatter()
         // Simplify for architecture demo
         let windSpeed = openMeteo.hourly.wind_speed_10m.first ?? 0
         let windDir = openMeteo.hourly.wind_direction_10m.first ?? 0

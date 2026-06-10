@@ -24,7 +24,7 @@ struct TopBarView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
                 TextField("Search Location...", text: $searchText)
-                    .onChange(of: searchText) { newValue in
+                    .onChange(of: searchText) { oldValue, newValue in
                         if newValue.count > 2 {
                             performSearch(query: newValue)
                         } else {
