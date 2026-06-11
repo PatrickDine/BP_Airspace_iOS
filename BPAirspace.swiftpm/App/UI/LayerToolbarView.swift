@@ -3,28 +3,29 @@ import SwiftUI
 struct LayerToolbarView: View {
     @EnvironmentObject var viewModel: WeatherViewModel
     @Environment(\.horizontalSizeClass) var sizeClass
-    
+
     var body: some View {
         if sizeClass == .compact {
-            // Horizontal scroll for iPhone
+            // iPhone: horizontal scroll strip
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
+                HStack(spacing: 6) {
                     ForEach(WeatherLayer.allCases) { layer in
                         LayerButton(layer: layer)
                     }
                 }
-                .padding()
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
             }
             .background(.ultraThinMaterial)
-            .cornerRadius(12)
+            .cornerRadius(14)
         } else {
-            // Vertical stack for iPad
-            VStack(spacing: 12) {
+            // iPad: vertical strip
+            VStack(spacing: 6) {
                 ForEach(WeatherLayer.allCases) { layer in
                     LayerButton(layer: layer)
                 }
             }
-            .padding(12)
+            .padding(8)
             .background(.ultraThinMaterial)
             .cornerRadius(16)
         }
@@ -34,21 +35,40 @@ struct LayerToolbarView: View {
 struct LayerButton: View {
     let layer: WeatherLayer
     @EnvironmentObject var viewModel: WeatherViewModel
-    
+
+    private var isActive: Bool { viewModel.activeLayer == layer }
+
     var body: some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-                viewModel.toggleLayer(layer)
+        Button {
+            withAnimation(.spring(response: 0.30, dampingFraction: 0.68)) {
+                viewModel.activeLayer = layer
             }
             HapticEngine.shared.lightImpact()
-        }) {
-            Image(systemName: layer.iconName)
-                .font(.system(size: 20))
-                .foregroundColor(viewModel.activeLayers.contains(layer) ? .white : .primary)
-                .frame(width: 44, height: 44)
-                .background(viewModel.activeLayers.contains(layer) ? Color.blue : Color(UIColor.systemBackground).opacity(0.6))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 2)
+        } label: {
+            VStack(spacing: 3) {
+                Image(systemName: layer.iconName)
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(width: 42, height: 42)
+                    .foregroundStyle(isActive ? .white : layer.accentColor)
+                    .background(
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(isActive ? layer.accentColor : layer.accentColor.opacity(0.12))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .stroke(isActive ? layer.accentColor : .clear, lineWidth: 1.5)
+                    )
+                    .shadow(color: isActive ? layer.accentColor.opacity(0.45) : .clear,
+                            radius: 6, x: 0, y: 3)
+
+                Text(layer.rawValue)
+                    .font(.system(size: 9, weight: isActive ? .bold : .medium))
+                    .foregroundColor(isActive ? layer.accentColor : .secondary)
+            }
+            .frame(width: 52)
         }
+        .buttonStyle(.plain)
+        .scaleEffect(isActive ? 1.06 : 1.0)
+        .animation(.spring(response: 0.30, dampingFraction: 0.68), value: isActive)
     }
 }

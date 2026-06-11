@@ -3,96 +3,165 @@ import MapKit
 
 struct MapView: View {
     @EnvironmentObject var viewModel: WeatherViewModel
-    
-    // Map Camera Position
     @State private var position: MapCameraPosition = .automatic
-    
+    @State private var pulseScale: CGFloat = 1.0
+    @State private var pulseOpacity: Double = 0.8
+
     var body: some View {
-        Map(position: $position) {
-            // Draw active route if available
-            if let route = viewModel.activeRoute {
-                MapPolyline(coordinates: route.coordinates)
-                    .stroke(.green, lineWidth: 4)
-                
-                // Start Marker (Green)
-                if let first = route.coordinates.first {
-                    Marker(route.departure, systemImage: "airplane.departure", coordinate: first)
-                        .tint(.green)
+        MapReader { reader in
+            Map(position: $position) {
+
+                // ── Active route polyline + markers ──────────────────────
+                if let route = viewModel.activeRoute {
+                    // Draw segments coloured by waypoint safety
+                    if route.coordinates.count >= 2 {
+                        MapPolyline(coordinates: route.coordinates)
+                            .stroke(.white.opacity(0.9), lineWidth: 3)
+                    }
+
+                    // Waypoint markers
+                    ForEach(route.waypoints) { wp in
+                        Annotation(wp.name, coordinate: wp.coordinate) {
+                            ZStack {
+                                Circle()
+                                    .fill(wp.safetyLevel.color)
+                                    .frame(width: 14, height: 14)
+                                Circle()
+                                    .stroke(.white, lineWidth: 2)
+                                    .frame(width: 14, height: 14)
+                            }
+                        }
+                    }
                 }
-                
-                // End Marker (Red)
-                if let last = route.coordinates.last {
-                    Marker(route.arrival, systemImage: "airplane.arrival", coordinate: last)
-                        .tint(.red)
+
+                // ── Tapped / selected location pin ───────────────────────
+                if let coord = viewModel.tappedCoordinate {
+                    Annotation("", coordinate: coord) {
+                        ZStack {
+                            // Pulsing ring
+                            Circle()
+                                .stroke(viewModel.activeLayer.accentColor, lineWidth: 2)
+                                .frame(width: 36 * pulseScale, height: 36 * pulseScale)
+                                .opacity(pulseOpacity)
+
+                            // Centre dot
+                            Circle()
+                                .fill(viewModel.activeLayer.accentColor)
+                                .frame(width: 12, height: 12)
+
+                            Circle()
+                                .stroke(.white, lineWidth: 2)
+                                .frame(width: 12, height: 12)
+                        }
+                        .onAppear { animatePulse() }
+                    }
+                }
+
+                // ── Grid weather overlay (MapCircle per grid point) ───────
+                ForEach(viewModel.gridDataPoints) { pt in
+                    let coord = CLLocationCoordinate2D(latitude: pt.lat, longitude: pt.lng)
+                    MapCircle(center: coord, radius: circleRadius)
+                        .foregroundStyle(gridColor(pt).opacity(0.50))
+                }
+
+            } // Map
+            .mapStyle(.standard(elevation: .realistic, emphasis: .muted))
+            .mapControls {
+                MapUserLocationButton()
+                MapCompass()
+                MapScaleView()
+            }
+
+            // ── Tap-to-inspect ───────────────────────────────────────────
+            .onTapGesture { screenPt in
+                guard let coord = reader.convert(screenPt, from: .local) else { return }
+                HapticEngine.shared.mediumImpact()
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    viewModel.tappedCoordinate = coord
+                    viewModel.selectedLocation = GeocodingResult(
+                        id: abs(coord.latitude.hashValue ^ coord.longitude.hashValue),
+                        name: String(format: "%.3f°, %.3f°", coord.latitude, coord.longitude),
+                        latitude: coord.latitude, longitude: coord.longitude,
+                        country: nil, admin1: nil
+                    )
+                }
+                viewModel.fetchWeather(lat: coord.latitude, lng: coord.longitude)
+                pulseScale = 1.0; pulseOpacity = 0.8
+                animatePulse()
+            }
+
+            // ── Grid refresh when user finishes panning ──────────────────
+            .onMapCameraChange(frequency: .onEnd) { ctx in
+                let c = ctx.region.center
+                let span = ctx.region.span.latitudeDelta
+                viewModel.mapSpanDelta = span
+                viewModel.fetchGridWeather(centerLat: c.latitude,
+                                            centerLng: c.longitude, span: span)
+            }
+
+            // ── Wind-particle overlay ─────────────────────────────────────
+            .overlay(alignment: .center) {
+                if viewModel.activeLayer == .wind {
+                    WindParticleView()
+                        .environmentObject(viewModel)
+                        .allowsHitTesting(false)
+                        .ignoresSafeArea()
                 }
             }
-            
-            // Draw Geocoded Search Result
-            if let searchLocation = viewModel.selectedLocation {
-                Marker(searchLocation.name, systemImage: "mappin.circle.fill", coordinate: CLLocationCoordinate2D(latitude: searchLocation.latitude, longitude: searchLocation.longitude))
-                    .tint(.blue)
-            }
-        }
-        .mapStyle(.standard(elevation: .realistic))
-        .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-            MapScaleView()
-        }
-        .overlay {
-            // Overlay visual weather layers based on active layers
-            // Note: True weather map tiles require MapKit JS or custom MKTileOverlay
-            // For native MapKit, we simulate global overlay effects.
-            ZStack {
-                if viewModel.activeLayers.contains(.radar) {
-                    LinearGradient(gradient: Gradient(colors: [.blue.opacity(0.3), .green.opacity(0.1)]), startPoint: .topLeading, endPoint: .bottomTrailing)
-                        .ignoresSafeArea().allowsHitTesting(false)
-                }
-                if viewModel.activeLayers.contains(.clouds) {
-                    LinearGradient(gradient: Gradient(colors: [.white.opacity(0.4), .gray.opacity(0.2)]), startPoint: .top, endPoint: .bottom)
-                        .ignoresSafeArea().allowsHitTesting(false)
-                }
-                if viewModel.activeLayers.contains(.temperature) {
-                    LinearGradient(gradient: Gradient(colors: [.red.opacity(0.25), .blue.opacity(0.15)]), startPoint: .top, endPoint: .bottom)
-                        .ignoresSafeArea().allowsHitTesting(false)
-                }
-                if viewModel.activeLayers.contains(.wind) {
-                    LinearGradient(gradient: Gradient(colors: [.cyan.opacity(0.3), .clear]), startPoint: .leading, endPoint: .trailing)
-                        .ignoresSafeArea().allowsHitTesting(false)
-                }
-                if viewModel.activeLayers.contains(.rain) {
-                    Color.blue.opacity(0.2).ignoresSafeArea().allowsHitTesting(false)
-                }
-                if viewModel.activeLayers.contains(.snow) {
-                    Color.white.opacity(0.3).ignoresSafeArea().allowsHitTesting(false)
-                }
-                if viewModel.activeLayers.contains(.visibility) {
-                    Color.yellow.opacity(0.15).ignoresSafeArea().allowsHitTesting(false)
-                }
-            }
-            .animation(.easeInOut(duration: 0.5), value: viewModel.activeLayers)
-        }
+
+        } // MapReader
+
+        // Initial camera + grid
         .onAppear {
             if let loc = viewModel.selectedLocation {
-                position = .camera(MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude), distance: 500000))
-            } else if let route = viewModel.activeRoute, let first = route.coordinates.first {
-                // Initial weather fetch for departure
-                viewModel.fetchWeather(lat: first.latitude, lng: first.longitude)
-                
-                // Auto position map to route
-                let rect = MKMapRect(
-                    origin: MKMapPoint(first),
-                    size: MKMapSize(width: MKMapPoint(route.coordinates.last!).x - MKMapPoint(first).x,
-                                    height: MKMapPoint(route.coordinates.last!).y - MKMapPoint(first).y)
-                )
-                position = .rect(rect)
+                let coord = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
+                position = .camera(MapCamera(centerCoordinate: coord, distance: 1_500_000))
+                viewModel.fetchGridWeather(centerLat: loc.latitude,
+                                            centerLng: loc.longitude, span: 20.0)
+            } else {
+                // Default to world view
+                position = .camera(MapCamera(
+                    centerCoordinate: CLLocationCoordinate2D(latitude: 20, longitude: 0),
+                    distance: 15_000_000))
+                viewModel.fetchGridWeather(centerLat: 20, centerLng: 0, span: 60)
             }
         }
-        .onChange(of: viewModel.selectedLocation?.id) { oldValue, newValue in
+
+        // Re-center when selected location changes (e.g. home airport or search)
+        .onChange(of: viewModel.selectedLocation?.id) { _, _ in
             if let loc = viewModel.selectedLocation {
-                viewModel.fetchWeather(lat: loc.latitude, lng: loc.longitude)
-                position = .camera(MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude), distance: 500000))
+                let coord = CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude)
+                withAnimation {
+                    position = .camera(MapCamera(centerCoordinate: coord, distance: 800_000))
+                }
             }
+        }
+    }
+
+    // MARK: - Helpers
+
+    /// Scale the overlay circle radius with the current zoom span
+    private var circleRadius: CLLocationDistance {
+        max(50_000, viewModel.mapSpanDelta * 40_000)
+    }
+
+    private func gridColor(_ pt: GridWeatherPoint) -> Color {
+        switch viewModel.activeLayer {
+        case .wind:        return WeatherColorMap.wind(pt.windSpeed)
+        case .temperature: return WeatherColorMap.temperature(pt.temperature)
+        case .rain:        return WeatherColorMap.rain(pt.rain)
+        case .clouds:      return WeatherColorMap.cloud(pt.cloudCover)
+        case .snow:        return WeatherColorMap.snow(pt.snowfall)
+        case .visibility:  return WeatherColorMap.visibility(pt.visibility)
+        case .humidity:    return WeatherColorMap.humidity(Double(pt.humidity))
+        case .pressure:    return WeatherColorMap.pressure(pt.pressure)
+        }
+    }
+
+    private func animatePulse() {
+        withAnimation(.easeOut(duration: 1.4).repeatForever(autoreverses: false)) {
+            pulseScale   = 2.2
+            pulseOpacity = 0.0
         }
     }
 }
