@@ -16,7 +16,6 @@ let package = Package(
         .iOSApplication(
             name: "BPAirspace",
             targets: ["AppModule"],
-            teamIdentifier: "Y889FV57UV",
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .asset("AppIcon"),
