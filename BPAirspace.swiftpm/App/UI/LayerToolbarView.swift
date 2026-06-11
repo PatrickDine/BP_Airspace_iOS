@@ -37,7 +37,10 @@ struct LayerButton: View {
     
     var body: some View {
         Button(action: {
-            viewModel.toggleLayer(layer)
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                viewModel.toggleLayer(layer)
+            }
+            HapticEngine.shared.lightImpact()
         }) {
             Image(systemName: layer.iconName)
                 .font(.system(size: 20))

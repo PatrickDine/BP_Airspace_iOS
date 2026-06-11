@@ -1,36 +1,38 @@
-# BP Airspace Evolution
+# BP Airspace
 
-**Briefing Point GO - Aviation Operational Intelligence Platform**
+**Aviation Operational Intelligence Platform**
 
 BP Airspace has been radically upgraded from a simple geospatial map into a fully native iOS Operational Intelligence Engine. This repository contains the complete Swift 6 / SwiftUI implementation of the massive Intelligence Engine Matrix, natively rendering critical meteorological data using Apple MapKit and Metal.
 
-## 🚀 Engine Architecture
+### 🛑 Standalone Architecture
+**Notice**: BP Airspace is a 100% independent, standalone aviation application. It does not depend on, nor does it reference, Briefing Point GO or any external proprietary modules. It relies strictly on its own internal `CoreEngines` matrix.
 
-The architecture has been completely decoupled into single-responsibility intelligence actors:
+## The Engine Matrix (17-Phase Re-Architecture)
 
-- **Weather Intelligence Engine (WIE)**: The core data ingestion engine. Aggregates Open-Meteo forecasts and simulated NOAA/AWC METARs using robust structured concurrency (`async/await`).
-- **Hazard Engine**: Actively scans WIE feeds to detect operational threats such as Convective Activity, Wind Shear, and Low Visibility.
-- **TEM Engine (Threat & Error Management)**: Analyzes detected hazards and automatically generates standardized Threat, Error, and Mitigation briefs for the flight crew.
-- **Fatigue Engine**: Computes an Operational Stress Index dynamically based on environmental severity and flight duration.
-- **AI Copilot Engine**: Processes numerical meteorological data into human-readable, pilot-focused guidance (e.g., "Expect deviation 20 NM due to convective activity").
-- **Radar Engine**: Prepared to ingest volumetric datasets (PyART/PyCWR) and map reflectivity to MapKit Overlays using Metal Shaders.
+1. **AirspaceEngine**: GeoJSON bounds parsing and Class B/C/D visualization.
+2. **WeatherEngine**: Single-source-of-truth atmospheric pipeline (Wetterdienst design emulation).
+3. **RadarEngine**: Native Swift translation of PyART / pycwr volumetric radar algorithms.
+4. **TrafficEngine**: Local ADS-B parsing and trailing visualizations.
+5. **HazardEngine**: Automated detection of Microbursts, Wind Shear, and Severe Convection.
+6. **AirportEngine**: Weather reliability scoring, crosswind limits, and LVP detection.
+7. **RouteIntelligenceEngine**: 4D Waypoint weather timeline generation.
+8. **LayerEngine**: Dynamic toggle control for Weather, Radar, Jet Streams, and Turbulence.
+9. **PlaybackEngine**: 60fps historical radar timeline animation (Weather Radar Card logic).
+10. **OfflineEngine**: SwiftData-powered caching for routes, airspace, and weather tiles.
+11. **SynchronizationEngine**: Background incremental data fetching.
+12. **AnalyticsEngine**: Internal telemetry and TEM (Threat and Error Management) profiling.
+13. **AICopilotEngine**: Aviation-focused NLP briefing generation.
+14. **MapRenderingEngine**: Apple Metal-backed high-performance OpenGL translations from Supercell-WX.
 
-## 📱 Human Interface Guidelines (HIG)
+## Technology Stack
+- **Language**: Swift 6
+- **UI Framework**: SwiftUI
+- **Map & Geo**: MapKit, CoreLocation
+- **Graphics**: Metal (Shaders)
+- **Data Persistence**: SwiftData / FileManager
+- **Concurrency**: `actor` and `async/await` Structured Concurrency
 
-- **Advanced Layer Manager**: Total control over MapKit `.ultraThinMaterial` overlays for Radar, Weather, Airports, NOTAMs, and Traffic.
-- **Operations Panel**: A minimalist, low-cognitive-load floating panel that aggregates TEM profiles, Fatigue status, and AI Copilot Briefings perfectly synchronized with the map.
-- **Offline Reliability**: Backed by `OfflineCacheManager` to store aggregated intelligence locally to the filesystem, guaranteeing full Operational Awareness even during Airplane mode.
-
-## 🛠️ Tech Stack
-
-- **100% Native iOS**. No WebViews, no React Native, no Flutter.
-- **Swift 6 & SwiftUI**
-- **MapKit** for ultra-smooth 60fps rendering.
-- **Combine & ObservableObjects** for reactive engine states.
-
-## 📦 How to Run
-
-1. Open `BPAirspace.swiftpm` in **Xcode 15+** or the **Swift Playgrounds App**.
-2. Target an **iOS 17.0+** simulator or device.
-3. If necessary, clean your build folder (`Cmd + Shift + K`).
-4. Press **Play** to launch the Operational Map!
+## Build Instructions
+1. Open `BPAirspace.swiftpm` in Xcode 15+ or Swift Playgrounds.
+2. Select target iOS 17.0+.
+3. Run `Cmd+R`. No external dependency managers (CocoaPods/Carthage) are required. All logic is contained within the Swift Package Manager format.

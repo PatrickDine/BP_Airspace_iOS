@@ -1,23 +1,23 @@
 import SwiftUI
 
 enum AppColors {
-    static let bgPrimary = Color(hex: "F9F6F0")
-    static let bgSecondary = Color(hex: "F1EBE0")
-    static let bgCard = Color.white
-    static let bgDark = Color(hex: "1C1917")
+    // We rely on standard Apple Materials for backgrounds:
+    // .ultraThinMaterial, .thinMaterial, .regularMaterial, .thickMaterial
+    // The below colors are accents or overrides where materials cannot be used.
     
-    static let textPrimary = Color(hex: "1C1917")
-    static let textSecondary = Color(hex: "57534E")
-    static let textLight = Color(hex: "A8A29E")
-    static let textOnDark = Color(hex: "F9F6F0")
+    static let bgPrimary = Color(.systemBackground)
+    static let bgSecondary = Color(.secondarySystemBackground)
     
-    static let accentGold = Color(hex: "C29F5D")
-    static let accentGoldHover = Color(hex: "A6874B")
+    static let textPrimary = Color.primary
+    static let textSecondary = Color.secondary
     
-    static let danger = Color(hex: "991B1B")
-    static let warning = Color(hex: "B45309")
-    static let safe = Color(hex: "166534")
-    static let info = Color(hex: "1E40AF")
+    static let accentGold = Color.blue // Aviation Blue instead of gold for a premium native look
+    static let accentGoldHover = Color.blue.opacity(0.8)
+    
+    static let danger = Color.red
+    static let warning = Color.orange
+    static let safe = Color.green
+    static let info = Color.blue
 }
 
 extension Color {

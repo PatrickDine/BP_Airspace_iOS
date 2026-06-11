@@ -48,17 +48,17 @@ struct OpenMeteoResponse: Codable {
 }
 
 struct HourlyData: Codable {
-    let time: [String]
-    let temperature_2m: [Double]
-    let wind_speed_10m: [Double]
-    let wind_direction_10m: [Int]
-    let wind_gusts_10m: [Double]
-    let cloud_cover: [Int]
-    let rain: [Double]
-    let snowfall: [Double]
-    let visibility: [Double]
-    let weather_code: [Int]
-    let relative_humidity_2m: [Int]
+    let time: [String]?
+    let temperature_2m: [Double?]?
+    let wind_speed_10m: [Double?]?
+    let wind_direction_10m: [Int?]?
+    let wind_gusts_10m: [Double?]?
+    let cloud_cover: [Int?]?
+    let rain: [Double?]?
+    let snowfall: [Double?]?
+    let visibility: [Double?]?
+    let weather_code: [Int?]?
+    let relative_humidity_2m: [Int?]?
 }
 
 // MARK: - Geocoding Models
@@ -143,8 +143,16 @@ class WeatherViewModel: ObservableObject {
         URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.isLoading = false
+                
+                if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                    print("HTTP Error \(httpResponse.statusCode)")
+                    HapticEngine.shared.error()
+                    return
+                }
+                
                 guard let data = data else {
                     print("Network failed. Continuing with offline data if available.")
+                    HapticEngine.shared.error()
                     return
                 }
                 do {
@@ -153,10 +161,10 @@ class WeatherViewModel: ObservableObject {
                     OfflineCacheManager.shared.save(decoded, for: cacheKey)
                     
                     // Hook into BP Airspace Engines
-                    if let firstWind = decoded.hourly.wind_speed_10m.first,
-                       let firstTemp = decoded.hourly.temperature_2m.first,
-                       let firstVis = decoded.hourly.visibility.first,
-                       let firstDir = decoded.hourly.wind_direction_10m.first {
+                    if let firstWind = decoded.hourly.wind_speed_10m?.compactMap({ $0 }).first,
+                       let firstTemp = decoded.hourly.temperature_2m?.compactMap({ $0 }).first,
+                       let firstVis = decoded.hourly.visibility?.compactMap({ $0 }).first,
+                       let firstDir = decoded.hourly.wind_direction_10m?.compactMap({ $0 }).first {
                         
                         let agg = AggregatedWeather(
                             windSpeed: firstWind,

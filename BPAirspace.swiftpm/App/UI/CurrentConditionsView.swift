@@ -25,22 +25,22 @@ struct CurrentConditionsView: View {
             Divider()
             
             if let weather = viewModel.weatherData {
-                let hourIndex = min(viewModel.forecastIndex, weather.hourly.time.count - 1)
+                let hourIndex = min(viewModel.forecastIndex, (weather.hourly.time?.count ?? 1) - 1)
                 
                 VStack(alignment: .leading, spacing: 12) {
                     ConditionRow(title: "Location", value: viewModel.selectedLocation?.name ?? "Selected Route")
                     
                     if hourIndex >= 0 {
-                        ConditionRow(title: "Time", value: formatTime(weather.hourly.time[hourIndex]))
-                        ConditionRow(title: "Temperature", value: String(format: "%.1f°C", weather.hourly.temperature_2m[hourIndex]))
-                        ConditionRow(title: "Wind", value: String(format: "%.1f km/h @ %d°", weather.hourly.wind_speed_10m[hourIndex], weather.hourly.wind_direction_10m[hourIndex]))
-                        ConditionRow(title: "Wind Gusts", value: String(format: "%.1f km/h", weather.hourly.wind_gusts_10m[hourIndex]))
-                        ConditionRow(title: "Cloud Cover", value: "\(weather.hourly.cloud_cover[hourIndex])%")
-                        ConditionRow(title: "Rain", value: String(format: "%.1f mm", weather.hourly.rain[hourIndex]))
-                        ConditionRow(title: "Snowfall", value: String(format: "%.1f cm", weather.hourly.snowfall[hourIndex]))
-                        ConditionRow(title: "Visibility", value: String(format: "%.1f km", weather.hourly.visibility[hourIndex] / 1000.0))
-                        ConditionRow(title: "Humidity", value: "\(weather.hourly.relative_humidity_2m[hourIndex])%")
-                        ConditionRow(title: "Condition Code", value: "\(weather.hourly.weather_code[hourIndex])")
+                        ConditionRow(title: "Time", value: formatTime(weather.hourly.time?[hourIndex] ?? ""))
+                        ConditionRow(title: "Temperature", value: String(format: "%.1f°C", weather.hourly.temperature_2m?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Wind", value: String(format: "%.1f km/h @ %d°", weather.hourly.wind_speed_10m?[hourIndex] ?? 0.0, weather.hourly.wind_direction_10m?[hourIndex] ?? 0))
+                        ConditionRow(title: "Wind Gusts", value: String(format: "%.1f km/h", weather.hourly.wind_gusts_10m?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Cloud Cover", value: "\(weather.hourly.cloud_cover?[hourIndex] ?? 0)%")
+                        ConditionRow(title: "Rain", value: String(format: "%.1f mm", weather.hourly.rain?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Snowfall", value: String(format: "%.1f cm", weather.hourly.snowfall?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Visibility", value: String(format: "%.1f km", (weather.hourly.visibility?[hourIndex] ?? 0.0) / 1000.0))
+                        ConditionRow(title: "Humidity", value: "\(weather.hourly.relative_humidity_2m?[hourIndex] ?? 0)%")
+                        ConditionRow(title: "Condition Code", value: "\(weather.hourly.weather_code?[hourIndex] ?? 0)")
                     }
                 }
             } else {

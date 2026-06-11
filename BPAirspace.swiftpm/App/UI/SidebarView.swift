@@ -14,7 +14,7 @@ struct SidebarView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(AppColors.accentGold)
                     .frame(width: 38, height: 38)
-                Text("P")
+                Text("BP")
                     .font(.system(size: 20, weight: .bold, design: .default))
                     .foregroundColor(.white)
             }
@@ -23,28 +23,36 @@ struct SidebarView: View {
             
             // Nav Items
             NavItem(icon: "map.fill", isSelected: selectedTab == .map) {
-                selectedTab = .map
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                    selectedTab = .map
+                }
+                HapticEngine.shared.selection()
             }
             NavItem(icon: "airplane", isSelected: selectedTab == .route) {
-                selectedTab = .route
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                    selectedTab = .route
+                }
+                HapticEngine.shared.selection()
             }
             NavItem(icon: "fuelpump.fill", isSelected: selectedTab == .fuel) {
-                selectedTab = .fuel
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                    selectedTab = .fuel
+                }
+                HapticEngine.shared.selection()
             }
             NavItem(icon: "sparkles", isSelected: selectedTab == .ai) {
-                selectedTab = .ai
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                    selectedTab = .ai
+                }
+                HapticEngine.shared.selection()
             }
             
             Spacer()
         }
         .frame(width: 64)
-        .background(AppColors.bgCard)
-        .overlay(
-            Rectangle()
-                .frame(width: 1)
-                .foregroundColor(AppColors.textSecondary.opacity(0.1)),
-            alignment: .trailing
-        )
+        .background(.ultraThinMaterial)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -60,7 +68,7 @@ struct NavItem: View {
                 .foregroundColor(isSelected ? AppColors.accentGold : AppColors.textSecondary)
                 .frame(width: 44, height: 44)
                 .background(isSelected ? AppColors.accentGold.opacity(0.15) : Color.clear)
-                .cornerRadius(8)
+                .cornerRadius(12)
                 .overlay(
                     HStack {
                         if isSelected {

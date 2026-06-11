@@ -72,15 +72,20 @@ struct TopBarView: View {
         }
         .padding()
         .background(.ultraThinMaterial)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
         .overlay(
             VStack {
                 if !searchResults.isEmpty {
                     List(searchResults) { result in
                         Button(action: {
-                            viewModel.selectedLocation = result
-                            viewModel.activeRoute = nil // Clear route to focus on location
-                            searchText = result.name
-                            searchResults = []
+                            HapticEngine.shared.mediumImpact()
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                                viewModel.selectedLocation = result
+                                viewModel.activeRoute = nil // Clear route to focus on location
+                                searchText = result.name
+                                searchResults = []
+                            }
                         }) {
                             VStack(alignment: .leading) {
                                 Text(result.name)

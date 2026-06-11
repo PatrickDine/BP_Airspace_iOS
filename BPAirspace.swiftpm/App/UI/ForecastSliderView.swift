@@ -13,7 +13,12 @@ struct ForecastSliderView: View {
             Slider(
                 value: Binding(
                     get: { Double(viewModel.forecastIndex) },
-                    set: { viewModel.forecastIndex = Int($0) }
+                    set: { newValue in
+                        if Int(newValue) != viewModel.forecastIndex {
+                            HapticEngine.shared.selection()
+                        }
+                        viewModel.forecastIndex = Int(newValue)
+                    }
                 ),
                 in: 0...71, // 3 days * 24 hours
                 step: 1
@@ -28,7 +33,7 @@ struct ForecastSliderView: View {
         .padding()
         .background(.ultraThinMaterial)
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
     }
     
     private var timeLabel: String {

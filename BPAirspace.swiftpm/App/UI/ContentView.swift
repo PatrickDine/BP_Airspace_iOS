@@ -37,13 +37,19 @@ struct ContentView: View {
                         Spacer()
                         
                         VStack(spacing: 16) {
-                            OperationsPanelView()
-                                .frame(width: 320)
-                            
-                            CurrentConditionsView()
-                                .environmentObject(viewModel)
-                                .frame(width: 320)
+                            switch selectedTab {
+                            case .map:
+                                CurrentConditionsView()
+                                    .environmentObject(viewModel)
+                            case .route:
+                                RoutePanelView()
+                            case .fuel:
+                                FuelPanelView()
+                            case .ai:
+                                OperationsPanelView()
+                            }
                         }
+                        .frame(width: 320)
                         .padding(.trailing)
                     }
                     

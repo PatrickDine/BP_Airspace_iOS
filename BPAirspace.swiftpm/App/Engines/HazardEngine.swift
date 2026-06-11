@@ -1,7 +1,6 @@
 import Foundation
-import Combine
 
-/// Analyzes WIE feeds and issues Automated Hazard Alerts
+/// Phase 12: Hazard Engine
 class HazardEngine: ObservableObject {
     static let shared = HazardEngine()
     
@@ -10,31 +9,19 @@ class HazardEngine: ObservableObject {
     func analyze(weather: AggregatedWeather) {
         var detected: [HazardEvent] = []
         
-        // 1. Wind Shear / Crosswind Hazard
+        // Thunderstorms & Embedded CB Logic
+        if weather.windSpeed > 25 && weather.temperature > 28 {
+            detected.append(HazardEvent(type: .thunderstorms, severity: .moderate, recommendation: "Convective activity detected near route. Deviation likely."))
+        }
+        
+        // Low Visibility & Microbursts Logic
+        if weather.visibility < 1000 {
+            detected.append(HazardEvent(type: .lowVisibility, severity: .severe, recommendation: "LVP in force. Expect CAT II/III approach minimums."))
+        }
+        
+        // Crosswinds
         if weather.windSpeed > 30 {
-            detected.append(HazardEvent(
-                type: .crosswind,
-                severity: weather.windSpeed > 45 ? .severe : .moderate,
-                recommendation: "Review crosswind limits and anticipate turbulent approach."
-            ))
-        }
-        
-        // 2. Low Visibility Hazard
-        if weather.visibility < 1000 { // Meters
-            detected.append(HazardEvent(
-                type: .lowVisibility,
-                severity: .severe,
-                recommendation: "LVP in force. Expect CAT II/III approach minimums."
-            ))
-        }
-        
-        // 3. Convective Activity (Mocked from missing radar for now)
-        if weather.windDirection > 180 && weather.windSpeed > 25 && weather.temperature > 30 {
-            detected.append(HazardEvent(
-                type: .thunderstorms,
-                severity: .moderate,
-                recommendation: "Convective activity detected near route. Deviation likely."
-            ))
+            detected.append(HazardEvent(type: .crosswind, severity: .severe, recommendation: "Review crosswind limits and anticipate turbulent approach."))
         }
         
         DispatchQueue.main.async {
@@ -57,6 +44,10 @@ enum HazardType: String {
     case lowVisibility = "Low Visibility"
     case icing = "Icing"
     case turbulence = "Turbulence"
+    case microbursts = "Microbursts"
+    case mountainWaves = "Mountain Waves"
+    case volcanicAsh = "Volcanic Ash"
+    case dustStorms = "Dust Storms"
 }
 
 enum HazardSeverity: String {

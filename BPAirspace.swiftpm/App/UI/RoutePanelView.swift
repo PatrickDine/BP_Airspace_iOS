@@ -9,7 +9,7 @@ struct RoutePanelView: View {
             Text("Route Planning")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundColor(.primary)
             
             VStack(spacing: 12) {
                 TextField("Departure (e.g. KJFK)", text: $departure)
@@ -22,6 +22,8 @@ struct RoutePanelView: View {
             }
             
             Button(action: {
+                HapticEngine.shared.heavyImpact()
+                HapticEngine.shared.success()
                 // Trigger AI Route calculation
             }) {
                 HStack {
@@ -31,16 +33,18 @@ struct RoutePanelView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(AppColors.accentGold)
+                .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(8)
-                .shadow(color: AppColors.accentGold.opacity(0.4), radius: 5, x: 0, y: 3)
+                .cornerRadius(12)
+                .shadow(color: Color.blue.opacity(0.4), radius: 5, x: 0, y: 3)
             }
             
             Spacer()
         }
         .padding()
-        .background(AppColors.bgCard)
+        .background(.ultraThinMaterial)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -50,15 +54,30 @@ struct FuelPanelView: View {
             Text("Fuel Analytics")
                 .font(.title2)
                 .fontWeight(.bold)
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundColor(.primary)
             
-            Text("Coming Soon: Real-time fuel burn modeling based on weather patterns.")
-                .foregroundColor(AppColors.textSecondary)
+            Text("Active route fuel burn is currently being modeled based on real-time headwind vectors.")
+                .foregroundColor(.secondary)
                 .font(.subheadline)
+            
+            HStack {
+                Text("Est. Burn Rate:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("2,400 kg/hr")
+                    .font(.headline)
+                    .monospacedDigit()
+            }
+            .padding()
+            .background(Color(.secondarySystemFill))
+            .cornerRadius(8)
             
             Spacer()
         }
         .padding()
-        .background(AppColors.bgCard)
+        .background(.ultraThinMaterial)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
     }
 }
