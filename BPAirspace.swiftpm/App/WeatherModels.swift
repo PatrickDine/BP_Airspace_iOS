@@ -132,22 +132,8 @@ class WeatherViewModel: ObservableObject {
                 name: homeName,
                 latitude: homeLat,
                 longitude: homeLng,
-                elevation: nil,
-                feature_code: nil,
-                country_code: nil,
-                admin1_id: nil,
-                admin2_id: nil,
-                admin3_id: nil,
-                admin4_id: nil,
-                timezone: nil,
-                population: nil,
-                postcodes: nil,
-                country_id: nil,
                 country: nil,
-                admin1: nil,
-                admin2: nil,
-                admin3: nil,
-                admin4: nil
+                admin1: "Home"
             )
             fetchWeather(lat: homeLat, lng: homeLng)
         }
