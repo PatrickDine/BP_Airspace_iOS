@@ -10,6 +10,9 @@ struct TopBarView: View {
     @State private var utcTime = ""
     @State private var localTime = ""
     
+    // Settings Sheet State
+    @State private var showSettings = false
+    
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
@@ -64,11 +67,16 @@ struct TopBarView: View {
             }
             .padding(.trailing, 16)
             
-            // Profile
-            Circle()
-                .fill(Color.orange.opacity(0.8))
-                .frame(width: 32, height: 32)
-                .overlay(Text("G").font(.caption).fontWeight(.bold).foregroundColor(.white))
+            // Profile / Settings Button
+            Button(action: {
+                HapticEngine.shared.selection()
+                showSettings = true
+            }) {
+                Circle()
+                    .fill(Color.orange.opacity(0.8))
+                    .frame(width: 32, height: 32)
+                    .overlay(Image(systemName: "gearshape.fill").font(.caption).foregroundColor(.white))
+            }
         }
         .padding()
         .background(.ultraThinMaterial)
@@ -110,6 +118,9 @@ struct TopBarView: View {
         }
         .onAppear {
             updateClocks()
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
     }
     
