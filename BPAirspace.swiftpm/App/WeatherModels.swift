@@ -118,14 +118,7 @@ class WeatherViewModel: ObservableObject {
     @Published var selectedLocation: GeocodingResult?
     
     // Cached route mimicking original app
-    @Published var activeRoute: FlightRoute? = FlightRoute(
-        departure: "Banjul, The Gambia",
-        arrival: "Algiers, Algeria",
-        coordinates: [
-            CLLocationCoordinate2D(latitude: 13.33, longitude: -16.66), // Banjul
-            CLLocationCoordinate2D(latitude: 36.75, longitude: 3.05)    // Algiers
-        ]
-    )
+    @Published var activeRoute: FlightRoute? = nil
     
     func fetchWeather(lat: Double, lng: Double) {
         let cacheKey = "weather_\(String(format: "%.2f", lat))_\(String(format: "%.2f", lng))"

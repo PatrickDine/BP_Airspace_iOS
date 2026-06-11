@@ -45,15 +45,32 @@ struct MapView: View {
             // For native MapKit, we simulate global overlay effects.
             ZStack {
                 if viewModel.activeLayers.contains(.radar) {
-                    Color.blue.opacity(0.1).ignoresSafeArea().allowsHitTesting(false)
+                    LinearGradient(gradient: Gradient(colors: [.blue.opacity(0.3), .green.opacity(0.1)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .ignoresSafeArea().allowsHitTesting(false)
                 }
                 if viewModel.activeLayers.contains(.clouds) {
-                    Color.gray.opacity(0.2).ignoresSafeArea().allowsHitTesting(false)
+                    LinearGradient(gradient: Gradient(colors: [.white.opacity(0.4), .gray.opacity(0.2)]), startPoint: .top, endPoint: .bottom)
+                        .ignoresSafeArea().allowsHitTesting(false)
                 }
                 if viewModel.activeLayers.contains(.temperature) {
-                    Color.red.opacity(0.05).ignoresSafeArea().allowsHitTesting(false)
+                    LinearGradient(gradient: Gradient(colors: [.red.opacity(0.25), .blue.opacity(0.15)]), startPoint: .top, endPoint: .bottom)
+                        .ignoresSafeArea().allowsHitTesting(false)
+                }
+                if viewModel.activeLayers.contains(.wind) {
+                    LinearGradient(gradient: Gradient(colors: [.cyan.opacity(0.3), .clear]), startPoint: .leading, endPoint: .trailing)
+                        .ignoresSafeArea().allowsHitTesting(false)
+                }
+                if viewModel.activeLayers.contains(.rain) {
+                    Color.blue.opacity(0.2).ignoresSafeArea().allowsHitTesting(false)
+                }
+                if viewModel.activeLayers.contains(.snow) {
+                    Color.white.opacity(0.3).ignoresSafeArea().allowsHitTesting(false)
+                }
+                if viewModel.activeLayers.contains(.visibility) {
+                    Color.yellow.opacity(0.15).ignoresSafeArea().allowsHitTesting(false)
                 }
             }
+            .animation(.easeInOut(duration: 0.5), value: viewModel.activeLayers)
         }
         .onAppear {
             if let route = viewModel.activeRoute, let first = route.coordinates.first {
