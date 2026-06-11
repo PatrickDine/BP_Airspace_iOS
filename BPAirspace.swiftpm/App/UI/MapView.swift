@@ -73,7 +73,9 @@ struct MapView: View {
             .animation(.easeInOut(duration: 0.5), value: viewModel.activeLayers)
         }
         .onAppear {
-            if let route = viewModel.activeRoute, let first = route.coordinates.first {
+            if let loc = viewModel.selectedLocation {
+                position = .camera(MapCamera(centerCoordinate: CLLocationCoordinate2D(latitude: loc.latitude, longitude: loc.longitude), distance: 500000))
+            } else if let route = viewModel.activeRoute, let first = route.coordinates.first {
                 // Initial weather fetch for departure
                 viewModel.fetchWeather(lat: first.latitude, lng: first.longitude)
                 

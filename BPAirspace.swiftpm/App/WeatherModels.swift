@@ -120,6 +120,39 @@ class WeatherViewModel: ObservableObject {
     // Cached route mimicking original app
     @Published var activeRoute: FlightRoute? = nil
     
+    init() {
+        let defaults = UserDefaults.standard
+        let homeName = defaults.string(forKey: "homeAirportName") ?? ""
+        let homeLat = defaults.double(forKey: "homeAirportLat")
+        let homeLng = defaults.double(forKey: "homeAirportLng")
+        
+        if !homeName.isEmpty && homeLat != 0.0 && homeLng != 0.0 {
+            self.selectedLocation = GeocodingResult(
+                id: 0,
+                name: homeName,
+                latitude: homeLat,
+                longitude: homeLng,
+                elevation: nil,
+                feature_code: nil,
+                country_code: nil,
+                admin1_id: nil,
+                admin2_id: nil,
+                admin3_id: nil,
+                admin4_id: nil,
+                timezone: nil,
+                population: nil,
+                postcodes: nil,
+                country_id: nil,
+                country: nil,
+                admin1: nil,
+                admin2: nil,
+                admin3: nil,
+                admin4: nil
+            )
+            fetchWeather(lat: homeLat, lng: homeLng)
+        }
+    }
+    
     func fetchWeather(lat: Double, lng: Double) {
         let cacheKey = "weather_\(String(format: "%.2f", lat))_\(String(format: "%.2f", lng))"
         

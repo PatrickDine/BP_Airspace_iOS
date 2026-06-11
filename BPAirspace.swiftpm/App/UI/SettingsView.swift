@@ -3,15 +3,64 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     
+    @AppStorage("unitSystem") var unitSystem: String = "metric"
+    @AppStorage("homeAirportName") var homeAirportName: String = ""
+    @AppStorage("homeAirportLat") var homeAirportLat: Double = 0.0
+    @AppStorage("homeAirportLng") var homeAirportLng: Double = 0.0
+    
+    @State private var airportSearchQuery = ""
+    @State private var searchResults: [GeocodingResult] = []
+    @State private var isSearching = false
+    
     var body: some View {
         NavigationStack {
             List {
-                Section(header: Text("General")) {
-                    NavigationLink(destination: Text("Units & Preferences (Coming Soon)").navigationTitle("Units")) {
-                        Label("Units", systemImage: "ruler")
+                Section(header: Text("Preferences")) {
+                    Picker("Units", selection: $unitSystem) {
+                        Text("Metric (km, °C)").tag("metric")
+                        Text("Imperial/US (nm, °F)").tag("imperial")
                     }
-                    NavigationLink(destination: Text("Map Settings (Coming Soon)").navigationTitle("Map Options")) {
-                        Label("Map Options", systemImage: "map")
+                }
+                
+                Section(header: Text("Home Airport")) {
+                    if !homeAirportName.isEmpty {
+                        HStack {
+                            Text("Current:")
+                            Spacer()
+                            Text(homeAirportName).foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    HStack {
+                        TextField("Search Airport/City...", text: $airportSearchQuery)
+                            .onChange(of: airportSearchQuery) { oldValue, newValue in
+                                if newValue.count > 2 {
+                                    performSearch(query: newValue)
+                                } else {
+                                    searchResults = []
+                                }
+                            }
+                        if isSearching {
+                            ProgressView().scaleEffect(0.8)
+                        }
+                    }
+                    
+                    ForEach(searchResults) { result in
+                        Button(action: {
+                            homeAirportName = result.name
+                            homeAirportLat = result.latitude
+                            homeAirportLng = result.longitude
+                            airportSearchQuery = ""
+                            searchResults = []
+                            HapticEngine.shared.success()
+                        }) {
+                            VStack(alignment: .leading) {
+                                Text(result.name).foregroundColor(.primary)
+                                if let country = result.country {
+                                    Text(country).font(.caption).foregroundColor(.secondary)
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -33,7 +82,26 @@ struct SettingsView: View {
                     }
                 }
             }
+            }
         }
+    }
+    
+    private func performSearch(query: String) {
+        isSearching = true
+        let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let urlString = "https://geocoding-api.open-meteo.com/v1/search?name=\(encodedQuery)&count=5&language=en&format=json"
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                isSearching = false
+                guard let data = data else { return }
+                if let decoded = try? JSONDecoder().decode(GeocodingResponse.self, from: data) {
+                    self.searchResults = decoded.results ?? []
+                }
+            }
+        }.resume()
     }
 }
 

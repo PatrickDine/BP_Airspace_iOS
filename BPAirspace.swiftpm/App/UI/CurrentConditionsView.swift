@@ -2,6 +2,39 @@ import SwiftUI
 
 struct CurrentConditionsView: View {
     @EnvironmentObject var viewModel: WeatherViewModel
+    @AppStorage("unitSystem") var unitSystem: String = "metric"
+    
+    // Formatting Helpers
+    private func formatTemperature(_ val: Double) -> String {
+        if unitSystem == "imperial" {
+            return String(format: "%.1f°F", val * 9/5 + 32)
+        }
+        return String(format: "%.1f°C", val)
+    }
+    private func formatWind(_ val: Double) -> String {
+        if unitSystem == "imperial" {
+            return String(format: "%.1f kts", val * 0.539957)
+        }
+        return String(format: "%.1f km/h", val)
+    }
+    private func formatVisibility(_ val: Double) -> String { // val in meters
+        if unitSystem == "imperial" {
+            return String(format: "%.1f sm", (val / 1000.0) * 0.621371)
+        }
+        return String(format: "%.1f km", val / 1000.0)
+    }
+    private func formatPrecipitation(_ val: Double) -> String { // val in mm
+        if unitSystem == "imperial" {
+            return String(format: "%.2f in", val * 0.0393701)
+        }
+        return String(format: "%.1f mm", val)
+    }
+    private func formatSnow(_ val: Double) -> String { // val in cm
+        if unitSystem == "imperial" {
+            return String(format: "%.1f in", val * 0.393701)
+        }
+        return String(format: "%.1f cm", val)
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -32,13 +65,13 @@ struct CurrentConditionsView: View {
                     
                     if hourIndex >= 0 {
                         ConditionRow(title: "Time", value: formatTime(weather.hourly.time?[hourIndex] ?? ""))
-                        ConditionRow(title: "Temperature", value: String(format: "%.1f°C", weather.hourly.temperature_2m?[hourIndex] ?? 0.0))
-                        ConditionRow(title: "Wind", value: String(format: "%.1f km/h @ %d°", weather.hourly.wind_speed_10m?[hourIndex] ?? 0.0, weather.hourly.wind_direction_10m?[hourIndex] ?? 0))
-                        ConditionRow(title: "Wind Gusts", value: String(format: "%.1f km/h", weather.hourly.wind_gusts_10m?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Temperature", value: formatTemperature(weather.hourly.temperature_2m?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Wind", value: formatWind(weather.hourly.wind_speed_10m?[hourIndex] ?? 0.0) + " @ \(weather.hourly.wind_direction_10m?[hourIndex] ?? 0)°")
+                        ConditionRow(title: "Wind Gusts", value: formatWind(weather.hourly.wind_gusts_10m?[hourIndex] ?? 0.0))
                         ConditionRow(title: "Cloud Cover", value: "\(weather.hourly.cloud_cover?[hourIndex] ?? 0)%")
-                        ConditionRow(title: "Rain", value: String(format: "%.1f mm", weather.hourly.rain?[hourIndex] ?? 0.0))
-                        ConditionRow(title: "Snowfall", value: String(format: "%.1f cm", weather.hourly.snowfall?[hourIndex] ?? 0.0))
-                        ConditionRow(title: "Visibility", value: String(format: "%.1f km", (weather.hourly.visibility?[hourIndex] ?? 0.0) / 1000.0))
+                        ConditionRow(title: "Rain", value: formatPrecipitation(weather.hourly.rain?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Snowfall", value: formatSnow(weather.hourly.snowfall?[hourIndex] ?? 0.0))
+                        ConditionRow(title: "Visibility", value: formatVisibility(weather.hourly.visibility?[hourIndex] ?? 0.0))
                         ConditionRow(title: "Humidity", value: "\(weather.hourly.relative_humidity_2m?[hourIndex] ?? 0)%")
                         ConditionRow(title: "Condition Code", value: "\(weather.hourly.weather_code?[hourIndex] ?? 0)")
                     }
