@@ -59,6 +59,8 @@ struct ContentView: View {
                             FuelPanelView()
                         case .ai:
                             OperationsPanelView()
+                        case .cities:
+                            CityWatchlistView().environmentObject(viewModel)
                         }
                     }
                     .frame(maxHeight: .infinity)

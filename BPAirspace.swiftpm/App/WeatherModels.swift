@@ -48,6 +48,8 @@ struct HourlyData: Codable {
     let weather_code: [Int?]?
     let relative_humidity_2m: [Int?]?
     let surface_pressure: [Double?]?
+    let apparent_temperature: [Double?]?   // Feels Like (Rain port)
+    let uv_index: [Double?]?               // UV Index   (Rain port)
 }
 
 // MARK: - Geocoding Models
@@ -79,6 +81,8 @@ struct WeatherDataPoint: Identifiable {
     let humidity: Int            // %
     let weatherCode: Int         // WMO
     let pressure: Double         // hPa
+    let apparentTemp: Double     // Feels Like °C  (Rain port)
+    let uvIndex: Double          // UV Index       (Rain port)
 }
 
 // MARK: - Grid Point for Map Overlay
@@ -195,7 +199,7 @@ class WeatherViewModel: ObservableObject {
     // Single active layer (Windy radio-button style)
     @Published var activeLayer: WeatherLayer = .wind
 
-    // Full 7-day response
+    // Full 14-day response
     @Published var weatherData: OpenMeteoResponse?
 
     // Processed per-hour data
@@ -203,6 +207,9 @@ class WeatherViewModel: ObservableObject {
 
     // 3×3 grid for map colour overlay
     @Published var gridDataPoints: [GridWeatherPoint] = []
+
+    // Air Quality (Rain port)
+    @Published var airQuality: AirQualityData?
 
     // State
     @Published var isLoading: Bool = false
@@ -251,8 +258,8 @@ class WeatherViewModel: ObservableObject {
         }
 
         isLoading = true
-        let fields = "temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,rain,snowfall,visibility,weather_code,relative_humidity_2m,surface_pressure"
-        let urlStr = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lng)&hourly=\(fields)&forecast_days=7&timezone=auto"
+        let fields = "temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cloud_cover,rain,snowfall,visibility,weather_code,relative_humidity_2m,surface_pressure,apparent_temperature,uv_index"
+        let urlStr = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lng)&hourly=\(fields)&forecast_days=14&timezone=auto"
         guard let url = URL(string: urlStr) else { return }
 
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
@@ -276,6 +283,11 @@ class WeatherViewModel: ObservableObject {
                     FatigueEngine.shared.calculateFatigue(hazards: HazardEngine.shared.activeHazards, flightDurationHours: 4.5)
                     AICopilotEngine.shared.generateBriefing(weather: agg, hazards: HazardEngine.shared.activeHazards)
                 }
+
+                // Fetch Air Quality (Rain port)
+                AirQualityEngine.shared.fetch(lat: lat, lng: lng) { [weak self] aq in
+                    self?.airQuality = aq
+                }
             }
         }.resume()
     }
@@ -289,17 +301,19 @@ class WeatherViewModel: ObservableObject {
             guard let date = fmt.date(from: clean) else { return nil }
             return WeatherDataPoint(
                 time:        date,
-                temperature: safeDouble(r.hourly.temperature_2m,   at: i),
-                windSpeed:   safeDouble(r.hourly.wind_speed_10m,    at: i),
-                windDirection: safeInt(r.hourly.wind_direction_10m, at: i),
-                windGusts:   safeDouble(r.hourly.wind_gusts_10m,    at: i),
-                cloudCover:  safeInt(r.hourly.cloud_cover,          at: i),
-                rain:        safeDouble(r.hourly.rain,              at: i),
-                snowfall:    safeDouble(r.hourly.snowfall,          at: i),
-                visibility:  safeDouble(r.hourly.visibility,        at: i, default: 10000),
-                humidity:    safeInt(r.hourly.relative_humidity_2m, at: i),
-                weatherCode: safeInt(r.hourly.weather_code,         at: i),
-                pressure:    safeDouble(r.hourly.surface_pressure,  at: i, default: 1013)
+                temperature: safeDouble(r.hourly.temperature_2m,       at: i),
+                windSpeed:   safeDouble(r.hourly.wind_speed_10m,        at: i),
+                windDirection: safeInt(r.hourly.wind_direction_10m,     at: i),
+                windGusts:   safeDouble(r.hourly.wind_gusts_10m,        at: i),
+                cloudCover:  safeInt(r.hourly.cloud_cover,              at: i),
+                rain:        safeDouble(r.hourly.rain,                  at: i),
+                snowfall:    safeDouble(r.hourly.snowfall,              at: i),
+                visibility:  safeDouble(r.hourly.visibility,            at: i, default: 10000),
+                humidity:    safeInt(r.hourly.relative_humidity_2m,     at: i),
+                weatherCode: safeInt(r.hourly.weather_code,             at: i),
+                pressure:    safeDouble(r.hourly.surface_pressure,      at: i, default: 1013),
+                apparentTemp: safeDouble(r.hourly.apparent_temperature, at: i),
+                uvIndex:     safeDouble(r.hourly.uv_index,              at: i)
             )
         }
     }

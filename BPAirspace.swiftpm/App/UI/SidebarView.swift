@@ -4,7 +4,7 @@ struct SidebarView: View {
     @Binding var selectedTab: Tab
     
     enum Tab {
-        case map, route, fuel, ai
+        case map, route, fuel, ai, cities
     }
     
     var body: some View {
@@ -46,7 +46,13 @@ struct SidebarView: View {
                 }
                 HapticEngine.shared.selection()
             }
-            
+            NavItem(icon: "building.2.fill", isSelected: selectedTab == .cities) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
+                    selectedTab = .cities
+                }
+                HapticEngine.shared.selection()
+            }
+
             Spacer()
         }
         .frame(width: 64)

@@ -40,22 +40,36 @@ struct CurrentConditionsView: View {
                             .monospacedDigit()
                     }
                     Spacer()
-                    WindCompassView(
-                        speed: pt.windSpeed,
-                        direction: pt.windDirection,
-                        unitSystem: unitSystem
-                    )
+                    VStack(alignment: .trailing, spacing: 6) {
+                        WindCompassView(
+                            speed: pt.windSpeed,
+                            direction: pt.windDirection,
+                            unitSystem: unitSystem
+                        )
+                        // AQI badge (Rain port)
+                        if let aq = viewModel.airQuality {
+                            Text("AQI \(aq.europeanAQI) · \(aq.aqiLabel)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(aq.aqiColor)
+                                .cornerRadius(8)
+                        }
+                    }
                 }
 
-                // ── 6-stat grid ──────────────────────────────────────────
+                // ── 8-stat grid (Rain port: adds Feels Like + UV) ─────────
                 let cols = [GridItem(.flexible()), GridItem(.flexible())]
                 LazyVGrid(columns: cols, spacing: 8) {
-                    StatCard(icon: "drop.fill",         label: "Rain",     value: formatPrecip(pt.rain))
-                    StatCard(icon: "cloud.fill",         label: "Cloud",    value: "\(pt.cloudCover)%")
-                    StatCard(icon: "eye.fill",           label: "Vis",      value: formatVis(pt.visibility))
-                    StatCard(icon: "humidity.fill",      label: "Humidity", value: "\(pt.humidity)%")
-                    StatCard(icon: "gauge.medium",       label: "QNH",      value: "\(Int(pt.pressure)) hPa")
-                    StatCard(icon: "snowflake",          label: "Snow",     value: formatSnow(pt.snowfall))
+                    StatCard(icon: "thermometer.medium",  label: "Feels Like", value: formatTemp(pt.apparentTemp))
+                    StatCard(icon: "sun.max.fill",        label: "UV Index",   value: uvLabel(pt.uvIndex))
+                    StatCard(icon: "drop.fill",           label: "Rain",       value: formatPrecip(pt.rain))
+                    StatCard(icon: "cloud.fill",          label: "Cloud",      value: "\(pt.cloudCover)%")
+                    StatCard(icon: "eye.fill",            label: "Vis",        value: formatVis(pt.visibility))
+                    StatCard(icon: "humidity.fill",       label: "Humidity",   value: "\(pt.humidity)%")
+                    StatCard(icon: "gauge.medium",        label: "QNH",        value: "\(Int(pt.pressure)) hPa")
+                    StatCard(icon: "snowflake",           label: "Snow",       value: formatSnow(pt.snowfall))
                 }
 
                 // ── Gusts warning ─────────────────────────────────────────
@@ -144,6 +158,15 @@ struct CurrentConditionsView: View {
         unitSystem == "imperial"
             ? String(format: "%.1f in", cm * 0.393701)
             : String(format: "%.1f cm", cm)
+    }
+    private func uvLabel(_ uv: Double) -> String {
+        switch uv {
+        case ..<3:   return String(format: "%.0f Low", uv)
+        case ..<6:   return String(format: "%.0f Moderate", uv)
+        case ..<8:   return String(format: "%.0f High", uv)
+        case ..<11:  return String(format: "%.0f Very High", uv)
+        default:     return String(format: "%.0f Extreme", uv)
+        }
     }
 
     // MARK: - WMO Code Mapping
