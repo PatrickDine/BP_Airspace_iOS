@@ -6,6 +6,11 @@ struct MapView: View {
     @State private var position: MapCameraPosition = .automatic
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 0.8
+    @State private var activeOWMLayer: OWMTileLayer? = nil   // Weather-Map port
+    @State private var mapRegion = MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 20, longitude: 0),
+        span: MKCoordinateSpan(latitudeDelta: 60, longitudeDelta: 60)
+    )
 
     var body: some View {
         MapReader { reader in
@@ -99,7 +104,7 @@ struct MapView: View {
                                             centerLng: c.longitude, span: span)
             }
 
-            // ── Wind-particle overlay ─────────────────────────────────────
+            // ── Wind-particle overlay ─────────────────────────────────
             .overlay(alignment: .center) {
                 if viewModel.activeLayer == .wind {
                     WindParticleView()
@@ -107,6 +112,23 @@ struct MapView: View {
                         .allowsHitTesting(false)
                         .ignoresSafeArea()
                 }
+            }
+
+            // ── OWM tile overlay (Weather-Map port) ─────────────────
+            .overlay(alignment: .center) {
+                if let owmLayer = activeOWMLayer {
+                    OWMMapOverlayView(layer: owmLayer, region: mapRegion)
+                        .environmentObject(viewModel)
+                        .allowsHitTesting(false)
+                        .ignoresSafeArea()
+                        .opacity(0.65)
+                }
+            }
+
+            // ── OWM layer picker ───────────────────────────────────
+            .overlay(alignment: .bottom) {
+                OWMLayerPickerView(activeOWMLayer: $activeOWMLayer)
+                    .padding(.bottom, 16)
             }
 
         } // MapReader

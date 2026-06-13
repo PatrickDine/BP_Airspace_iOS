@@ -156,3 +156,27 @@ All data is **free, no API key required**. Data is cached locally for offline ac
 ## 📄 License
 
 Proprietary — © BP Airspace. All rights reserved.
+
+---
+
+## 🔗 Open-Source Integrations
+
+BP Airspace integrates concepts and data pipelines from the following open-source projects:
+
+| Repository | Integration |
+|---|---|
+| [darkmoonight/Rain](https://github.com/darkmoonight/Rain) | Open-Meteo Air Quality API (AQI, PM2.5, PM10, NO₂, O₃), UV Index, Feels Like, 14-day forecast |
+| [TakefiveInteractive/WeatherMap](https://github.com/TakefiveInteractive/WeatherMap) | Multi-city watchlist with live weather + AQI badge per city, swipe/tap city navigation |
+| [rafaelkyrdan/Weather-Map](https://github.com/rafaelkyrdan/Weather-Map) | OpenWeatherMap tile overlay (radar, clouds, pressure, wind, temp) via MKTileOverlay |
+| [vbguyny/ws4kp](https://github.com/vbguyny/ws4kp) | NWS aviation alerts (SIGMETs, AIRMETs) from aviationweather.gov + api.weather.gov |
+| [earthobservations/wetterdienst](https://github.com/earthobservations/wetterdienst) | DWD (German Weather Service) ground station data via Bright Sky API (temperature, dewpoint, wind, pressure, visibility, 24h history) |
+| [windycom/API](https://github.com/windycom/API) | *(Research only — not integrated)* |
+
+### v1.2.0 — Open-Source Integration Wave
+- ✅ **Air Quality Index** panel — EU AQI + US AQI, PM2.5/PM10/NO₂/O₃/CO badges
+- ✅ **UV Index** and **Feels Like** stat cards in conditions panel
+- ✅ **14-day forecast** (extended from 7 days)
+- ✅ **Multi-city watchlist** — pin airports/cities, live temp + AQI per city
+- ✅ **Aviation Alerts** panel — live SIGMETs, AIRMETs, NWS active alerts with filter tabs
+- ✅ **DWD Station** panel — official DWD ground observations + 24h sparkline chart
+- ✅ **OWM Radar Tiles** — OpenWeatherMap live tile overlays on the native map (requires free OWM key)
